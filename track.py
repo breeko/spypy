@@ -16,31 +16,37 @@ ap.add_argument("--hflip", action="store_true", help="flip images taken from cam
 
 args = vars(ap.parse_args())
 
-if __name__ == "__main__":
+TEMP_FILE_NAME = "temp.jpg"
+
+def setup_camera(vflip, hflip):
     camera = picamera.PiCamera()
     camera.vflip = args["vflip"]
     camera.hflip = args["hflip"]
-    
-    interval = args["interval"]
-    temp_file_name = "temp.jpg"
+    return camera
 
-    if args["start"] > 0:
-        print("Starting in", args["start"], "minutes")
-        time.sleep(args["start"]*60)
+def track(camera, interval, start, end, directory):
+    if start > 0:
+        print("Starting in", start, "minutes")
+        time.sleep(start*60)
 
-    if args["end"] is not None:
-        end_time = dt.datetime.now() + dt.timedelta(minutes=args["end"])
+    if end is not None:
+        end_time = dt.datetime.now() + dt.timedelta(minutes=end)
         print("Running until {}".format(end_time.strftime("%Y-%m-%d %H:%M:%S")))
     else:
         end_time = dt.datetime.max
 
     print("Starting...")
     while dt.datetime.now() < end_time:
-        camera.capture(temp_file_name)
-        objects = detect_from_image(temp_file_name)
-        file_name = '{}/{}.json'.format(args["dir"], dt.datetime.now().strftime("%Y.%m.%d_%H.%M.%S"))
+        camera.capture(TEMP_FILE_NAME)
+        objects = detect_from_image(TEMP_FILE_NAME)
+        file_name = '{}/{}.json'.format(directory, dt.datetime.now().strftime("%Y.%m.%d_%H.%M.%S"))
 
         with open(file_name, 'w') as fp:
             json.dump(objects, fp)
     
-        time.sleep(args["interval"])
+        time.sleep(interval)
+
+if __name__ == "__main__":
+    camera = setup_camera(vflip=args["vflip"], hflip=args["hflip"])
+    track(camera=camera, interval=args["interval"], start=args["start"], end=args["end"], directory=args["dir"])
+
