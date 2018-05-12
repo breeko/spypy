@@ -65,27 +65,31 @@ def unique_config_sections(config_file):
 
 
 # %%
-def get_model(config_path, weights_path):
+def get_model(config_path, weights_path, verbose=False):
     assert config_path.endswith('.cfg'), '{} is not a .cfg file'.format(
         config_path)
     assert weights_path.endswith(
         '.weights'), '{} is not a .weights file'.format(weights_path)
 
     # Load weights and config.
-    print('Loading weights.')
+    if verbose:
+        print('Loading weights.')
     weights_file = open(weights_path, 'rb')
     weights_header = np.ndarray(
         shape=(4, ), dtype='int32', buffer=weights_file.read(16))
-    print('Weights Header: ', weights_header)
+    if verbose:
+        print('Weights Header: ', weights_header)
     # TODO: Check transpose flag when implementing fully connected layers.
     # transpose = (weight_header[0] > 1000) or (weight_header[1] > 1000)
 
-    print('Parsing Darknet config.')
+    if verbose:
+        print('Parsing Darknet config.')
     unique_config_file = unique_config_sections(config_path)
     cfg_parser = configparser.ConfigParser()
     cfg_parser.read_file(unique_config_file)
 
-    print('Creating Keras model.')
+    if verbose:
+        print('Creating Keras model.')
     image_height, image_width = None, None
     prev_layer = Input(shape=(image_height, image_width, 3))
     all_layers = [prev_layer]
@@ -94,7 +98,8 @@ def get_model(config_path, weights_path):
                          ) if 'net_0' in cfg_parser.sections() else 5e-4
     count = 0
     for section in cfg_parser.sections():
-        print('Parsing section {}'.format(section))
+        if verbose:
+            print('Parsing section {}'.format(section))
         if section.startswith('convolutional'):
             filters = int(cfg_parser[section]['filters'])
             size = int(cfg_parser[section]['size'])
@@ -116,8 +121,9 @@ def get_model(config_path, weights_path):
             darknet_w_shape = (filters, weights_shape[2], size, size)
             weights_size = np.product(weights_shape)
 
-            print('conv2d', 'bn'
-                  if batch_normalize else '  ', activation, weights_shape)
+            if verbose:
+                print('conv2d', 'bn'
+                    if batch_normalize else '  ', activation, weights_shape)
 
             conv_bias = np.ndarray(
                 shape=(filters, ),
@@ -208,7 +214,8 @@ def get_model(config_path, weights_path):
             ids = [int(i) for i in cfg_parser[section]['layers'].split(',')]
             layers = [all_layers[i] for i in ids]
             if len(layers) > 1:
-                print('Concatenating route layers:', layers)
+                if verbose:
+                    print('Concatenating route layers:', layers)
                 concatenate_layer = concatenate(layers)
                 all_layers.append(concatenate_layer)
                 prev_layer = concatenate_layer
@@ -242,13 +249,15 @@ def get_model(config_path, weights_path):
 
     # Create and save model.
     model = Model(inputs=all_layers[0], outputs=all_layers[-1])
-    print(model.summary())
+    if verbose:
+        print(model.summary())
     # Check to see if all weights have been read.
     remaining_weights = len(weights_file.read()) / 4
     weights_file.close()
-    print('Read {} of {} from Darknet weights.'.format(count, count +
+    if verbose:
+        print('Read {} of {} from Darknet weights.'.format(count, count +
                                                        remaining_weights))
-    if remaining_weights > 0:
+    if verbose and remaining_weights > 0:
         print('Warning: {} unused weights'.format(remaining_weights))
 
     return model

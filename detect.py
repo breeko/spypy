@@ -16,6 +16,11 @@ MAX_OVERLAP = 0.35
 
 model = None
 
+def load_yolo_model(config_path=CONFIG_PATH, weights_path=WEIGHTS_PATH):
+    global model
+    print("Loading model")
+    model = get_model(config_path, weights_path)
+
 def get_classes(classes_path):
     """ Loads classes from text file 
         Input: 
@@ -164,9 +169,8 @@ def detect_from_image(
     im_in = transform_image(image, model_image_size)
 
     global model
-
     if model is None:
-        model = get_model(config_path, weights_path)
+        load_yolo_model(config_path, weights_path)
     
     out = model.predict(im_in)
     box_xy, box_wh, box_confidence, box_class_probs = detect_from_model_output(out,anchors,num_classes)
