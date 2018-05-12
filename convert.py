@@ -49,11 +49,10 @@ def draw_on_image(image, objects, alpha):
     ax.imshow(image)
 
     for obj in objects:
-        obj_x,obj_y = obj["center"]
-        _,_,obj_w,obj_h  = obj["xywh"]
+        obj_x, obj_y = obj["center"]
+        _, _, obj_w, obj_h  = obj["xywh"]
         gauss = two_d_gaussian((x, y), obj_x, obj_y, obj_w, obj_h)
         cb = ax.contourf(x, y, gauss.reshape(x.shape[0], y.shape[1]), 14, cmap=mycmap, alpha=alpha)
-    
     if len(objects) > 0:
         plt.colorbar(cb)
     
@@ -68,14 +67,14 @@ def get_objects_from_directory(directory, object_type, verbose=True):
     num_frames_detected = 0
     num_objects_detected = 0
 
-    for fp in listdir(args["dir"]):
+    for fp in listdir(directory):
         if fp[-5:].lower() == ".json":
             json_file = json.load(open("{}/{}".format(directory, fp)))
-            objects_detected = json_file.get(args["object"], [])
+            objects_detected = json_file.get(object_type, [])
             objects.extend(objects_detected)
-            if len(objects) > 0:
+            if len(objects_detected) > 0:
                 num_frames_detected += 1 
-                num_objects_detected += len(objects)        
+                num_objects_detected += len(objects_detected)
     
     if verbose:
         print("{} frames contained {}. {} objects detected.".format(num_frames_detected, object_type, num_objects_detected))
