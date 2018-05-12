@@ -17,6 +17,7 @@ ap.add_argument("--hflip", action="store_true", help="flip images taken from cam
 args = vars(ap.parse_args())
 
 TEMP_FILE_NAME = "temp.jpg"
+TIME_FORMAT = "%Y.%m.%d_%H.%M.%S"
 
 def setup_camera(vflip, hflip):
     camera = picamera.PiCamera()
@@ -31,7 +32,7 @@ def track(camera, interval, start, end, directory):
 
     if end is not None:
         end_time = dt.datetime.now() + dt.timedelta(minutes=end)
-        print("Running until {}".format(end_time.strftime("%Y-%m-%d %H:%M:%S")))
+        print("Running until {}".format(end_time.strftime(TIME_FORMAT)))
     else:
         end_time = dt.datetime.max
 
@@ -39,11 +40,14 @@ def track(camera, interval, start, end, directory):
     while dt.datetime.now() < end_time:
         camera.capture(TEMP_FILE_NAME)
         objects = detect_from_image(TEMP_FILE_NAME)
-        file_name = '{}/{}.json'.format(directory, dt.datetime.now().strftime("%Y.%m.%d_%H.%M.%S"))
+        file_name = '{}/{}.json'.format(directory, dt.datetime.now().strftime(TIME_FORMAT))
 
         with open(file_name, 'w') as fp:
             json.dump(objects, fp)
-    
+
+        next_picture_time = dt.datetime.now() + dt.timedelta(seconds=interval)
+        print("Next picture will be taken at {}".format(next_picture_time.strftime(TIME_FORMAT)))
+        
         time.sleep(interval)
 
 if __name__ == "__main__":
