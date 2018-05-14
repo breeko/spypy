@@ -4,22 +4,14 @@ from itertools import product
 import numpy as np
 from yad2k_out import get_model
 import datetime as dt
-
-# Defaults
-ANCHORS_PATH = "model/yolov2.anchors"
-CLASSES_PATH = "model/yolov2.classes"
-CONFIG_PATH  = "model/yolov2.cfg"
-WEIGHTS_PATH = "model/yolov2.weights" 
-MODEL_IMAGE_SIZE = (608, 608)
-MIN_CONFIDENCE = 0.5
-MAX_OVERLAP = 0.35
+import model_configs as configs
 
 model = None
 
-def load_yolo_model(config_path=CONFIG_PATH, weights_path=WEIGHTS_PATH):
+def load_yolo_model():
     global model
     print("Loading model")
-    model = get_model(config_path, weights_path)
+    model = get_model(configs.CONFIG_PATH, configs.WEIGHTS_PATH)
 
 def get_classes(classes_path):
     """ Loads classes from text file 
@@ -148,33 +140,24 @@ def find_centers(im_xy, im_wh, im_confidence, im_class_probs, class_names, min_c
                 objects[class_name] = objects.get(class_name, []) + [{"coors": coors, "center": center, "x": x, "y": y, "w": w, "h": h, "xywh":xywh }]
     return objects
 
-def detect_from_image(
-        image, 
-        anchors_path=ANCHORS_PATH,
-        classes_path=CLASSES_PATH,
-        config_path=CONFIG_PATH,
-        weights_path=WEIGHTS_PATH,
-        min_confidence=MIN_CONFIDENCE,
-        max_overlap=MAX_OVERLAP,
-        model_image_size=MODEL_IMAGE_SIZE
-        ):
+def detect_from_image(image):
 
     if type(image) is str:
         image = Image.open(image)
 
-    anchors = get_anchors(anchors_path)
-    class_names, _ = get_classes(classes_path)
+    anchors = get_anchors(configs.ANCHORS_PATH)
+    class_names, _ = get_classes(configs.CLASSES_PATH)
     num_classes = len(class_names)
 
-    im_in = transform_image(image, model_image_size)
+    im_in = transform_image(image, configs.MODEL_IMAGE_SIZE)
 
     global model
     if model is None:
-        load_yolo_model(config_path, weights_path)
+        load_yolo_model()
     
     out = model.predict(im_in)
-    box_xy, box_wh, box_confidence, box_class_probs = detect_from_model_output(out,anchors,num_classes)
+    box_xy, box_wh, box_confidence, box_class_probs = detect_from_model_output(out, anchors, num_classes)
     im_xy, im_wh, im_confidence, im_class_probs = fit_to_image(image, box_xy, box_wh, box_confidence, box_class_probs)
-    objects = find_centers(im_xy, im_wh, im_confidence, im_class_probs, class_names, min_confidence, max_overlap)
+    objects = find_centers(im_xy, im_wh, im_confidence, im_class_probs, class_names, configs.MIN_CONFIDENCE, configs.MAX_OVERLAP)
     
     return objects

@@ -40,7 +40,7 @@ def track(camera, interval, start_time, end_time, directory):
 
     print("Starting...")
     while dt.datetime.now() < end_time:
-        next_picture_time = dt.timedelta(minutes=interval)
+        next_picture_time = dt.datetime.now() + dt.timedelta(minutes=interval)
         camera.capture(TEMP_FILE_NAME)
         objects = detect.detect_from_image(TEMP_FILE_NAME)
         file_name = '{}/{}.json'.format(directory, dt.datetime.now().strftime(TIME_FORMAT))
@@ -50,7 +50,7 @@ def track(camera, interval, start_time, end_time, directory):
 
         print("Next picture will be taken at {}".format(next_picture_time.strftime(TIME_FORMAT)))
         
-        seconds_to_sleep = (next_picture_time - dt.datetime.now()).seconds
+        seconds_to_sleep = (next_picture_time - dt.datetime.now()).total_seconds()
         seconds_to_sleep = max(0, seconds_to_sleep)
         time.sleep(seconds_to_sleep)
 
@@ -70,4 +70,3 @@ if __name__ == "__main__":
             end_time + dt.timedelta(days=1)
     
     track(camera=camera, interval=args["interval"], start_time=start_time, end_time=end_time, directory=args["dir"])
-
