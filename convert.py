@@ -10,11 +10,14 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 
 ap = argparse.ArgumentParser()
+
+ap.add_argument("function")
 ap.add_argument("-d", "--dir", type=str, default="logs/", help="directory to source json files with objects")
 ap.add_argument("-o", "--output", type=str, default="detected.png", help="output image path")
 ap.add_argument("-i", "--input", type=str, default=None, help="input image path on which to draw heatmap")
 ap.add_argument("-a", "--alpha", type=float, default=0.01, help="alpha of each object detected. The higher the alpha the less transparent each object")
 ap.add_argument("-b", "--object", type=str, default=None, help="object to draw on the heatmap")
+ap.add_argument("-f", "--filter", type=str, default="", help="string filter to apply on input files. for exampled -f 2018.05.14 would only select input files that have 2018.05.14 in file name")
 
 args = vars(ap.parse_args())
 
@@ -58,7 +61,7 @@ def draw_on_image(image, objects, alpha):
     
     return fig
 
-def get_objects_from_directory(directory, object_type, verbose=True):
+def get_objects_from_directory(directory, object_type, filter_str, verbose=True):
     if directory[-1] == "/":
         directory = directory[:-1]
     
@@ -66,26 +69,28 @@ def get_objects_from_directory(directory, object_type, verbose=True):
 
     num_frames_detected = 0
     num_objects_detected = 0
+    num_files = 0
 
     for fp in listdir(directory):
-        if fp[-5:].lower() == ".json":
-            json_file = json.load(open("{}/{}".format(directory, fp)))
-            objects_detected = json_file.get(object_type, [])
+        if fp[-5:].lower() == ".json" and filter_str in fp:
+            num_files += 1
+            json_dict = json.load(open("{}/{}".format(directory, fp)))
+            objects_detected = json_dict.get(object_type, [])
             objects.extend(objects_detected)
             if len(objects_detected) > 0:
                 num_frames_detected += 1 
                 num_objects_detected += len(objects_detected)
     
     if verbose:
-        print("{} frames contained {}. {} objects detected.".format(num_frames_detected, object_type, num_objects_detected))
+        print("{} files considered.\n{} frames contained {}.\n{} objects detected.".format(num_files, num_frames_detected, object_type, num_objects_detected))
     
     return objects
 
-def draw_on_image_from_directory(directory, image, output, object_type, alpha):
+def draw_on_image_from_directory(directory, image, output, object_type, filter_str, alpha):
     if type(image) is str:
         image = Image.open(image)
     
-    objects = get_objects_from_directory(directory, object_type)
+    objects = get_objects_from_directory(directory, object_type, filter_str)
 
     fig = draw_on_image(image, objects, alpha)
     fig.savefig("{}".format(output))
@@ -98,4 +103,4 @@ if __name__ == "__main__":
     assert args["alpha"] <= 1.0, "Alpha must be less than or equal to 1.0"
     assert args["alpha"] > 0.0, "Alpha must be greater than 0.0"
 
-    draw_on_image_from_directory(args["dir"], args["input"], args["output"], args["object"], args["alpha"])    
+    draw_on_image_from_directory(args["dir"], args["input"], args["output"], args["object"], args["filter"], args["alpha"])    
