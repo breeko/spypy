@@ -15,20 +15,25 @@ def summarize_logs(directory, filter_str):
         directory = directory[:-1]
     
     objects = {}
+    failed = []
 
     for fp in listdir(directory):
         if fp[-5:].lower() == ".json" and filter_str in fp:
-            json_dict = json.load(open("{}/{}".format(directory, fp)))
-            for k, v in json_dict.items():
-                if type(v) is not list:
-                    # meta field like time
-                    continue
-                    
-                if k not in objects:
-                    objects[k] = {}
-                num_files = objects[k].get("num_files", 0) + 1
-                num_objects = objects[k].get("num_objects", 0) + len(v)
-                objects[k] = {"num_files": num_files, "num_objects": num_objects}
+            try:
+                json_dict = json.load(open("{}/{}".format(directory, fp)))
+                for k, v in json_dict.items():
+                    if type(v) is not list:
+                        # meta field like time
+                        continue
+
+                    if k not in objects:
+                        objects[k] = {}
+                    num_files = objects[k].get("num_files", 0) + 1
+                    num_objects = objects[k].get("num_objects", 0) + len(v)
+                    objects[k] = {"num_files": num_files, "num_objects": num_objects}
+            except json.JSONDecodeError:
+                failed += fp
+
     if len(objects) == 0:
         if filter_str == "":
             print("No files detected in {}".format(directory))
@@ -37,6 +42,9 @@ def summarize_logs(directory, filter_str):
     else:
         df = DataFrame(objects).transpose()
         print(df.sort_values("num_files", ascending=False))
+        if len(failed) > 0:
+            print("Number failed: {}".format(len(failed)))
+            print("failed:{}".format(failed[:5]))
         
 
 if __name__ == "__main__":

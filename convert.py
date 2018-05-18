@@ -11,7 +11,6 @@ import matplotlib.colors as mcolors
 
 ap = argparse.ArgumentParser()
 
-ap.add_argument("function")
 ap.add_argument("-d", "--dir", type=str, default="logs/", help="directory to source json files with objects")
 ap.add_argument("-o", "--output", type=str, default="detected.png", help="output image path")
 ap.add_argument("-i", "--input", type=str, default=None, help="input image path on which to draw heatmap")
@@ -71,19 +70,27 @@ def get_objects_from_directory(directory, object_type, filter_str, verbose=True)
     num_objects_detected = 0
     num_files = 0
 
+    failed = []
+
     for fp in listdir(directory):
-        if fp[-5:].lower() == ".json" and filter_str in fp:
-            num_files += 1
-            json_dict = json.load(open("{}/{}".format(directory, fp)))
-            objects_detected = json_dict.get(object_type, [])
-            objects.extend(objects_detected)
-            if len(objects_detected) > 0:
-                num_frames_detected += 1 
-                num_objects_detected += len(objects_detected)
-    
+        try:
+            if fp[-5:].lower() == ".json" and filter_str in fp:
+                num_files += 1
+                json_dict = json.load(open("{}/{}".format(directory, fp)))
+                objects_detected = json_dict.get(object_type, [])
+                objects.extend(objects_detected)
+                if len(objects_detected) > 0:
+                    num_frames_detected += 1 
+                    num_objects_detected += len(objects_detected)
+        except json.JSONDecodeError:
+            failed.append(fp)
+
     if verbose:
         print("{} files considered.\n{} frames contained {}.\n{} objects detected.".format(num_files, num_frames_detected, object_type, num_objects_detected))
-    
+        if len(failed) > 0:
+            print("Number failed: {}".format(len(failed)))
+            print(failed[:5])
+
     return objects
 
 def draw_on_image_from_directory(directory, image, output, object_type, filter_str, alpha):
@@ -91,12 +98,14 @@ def draw_on_image_from_directory(directory, image, output, object_type, filter_s
         image = Image.open(image)
     
     objects = get_objects_from_directory(directory, object_type, filter_str)
+    if len(objects) > 0:
+        fig = draw_on_image(image, objects, alpha)
+        fig.savefig("{}".format(output))
 
-    fig = draw_on_image(image, objects, alpha)
-    fig.savefig("{}".format(output))
-
-    print("Saved file in {}".format(output))
-
+        print("Saved file in {}".format(output))
+    else:
+        print("No {} found in logs".format(object_type))
+        
 if __name__ == "__main__":
     assert args["input"] is not None, "Invalid input"
     assert args["object"] is not None, "Invalid object to detect"
