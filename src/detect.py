@@ -5,13 +5,18 @@ import numpy as np
 from yad2k_out import get_model
 import datetime as dt
 import model_configs as configs
+import requests
+from io import BytesIO
 
 model = None
 
 def load_yolo_model():
     global model
     print("Loading model")
-    model = get_model(configs.CONFIG_PATH, configs.WEIGHTS_PATH)
+    if configs.MODEL_PATH is None:
+        model = get_model(configs.CONFIG_PATH, configs.WEIGHTS_PATH)
+    else:
+        model = load_model(configs.MODEL_PATH)
 
 def get_classes(classes_path):
     """ Loads classes from text file 
@@ -143,7 +148,11 @@ def find_centers(im_xy, im_wh, im_confidence, im_class_probs, class_names, min_c
 def detect_from_image(image):
 
     if type(image) is str:
-        image = Image.open(image)
+        if image.startswith("http"):
+            response = requests.get(image)
+            image = Image.open(BytesIO(response.content))
+        else:
+            image = Image.open(image)
 
     anchors = get_anchors(configs.ANCHORS_PATH)
     class_names, _ = get_classes(configs.CLASSES_PATH)
