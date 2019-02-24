@@ -17,15 +17,15 @@ from collections import defaultdict
 import configparser
 
 import numpy as np
-from tensorflow.keras import backend as K
-from tensorflow.keras.layers import (Conv2D, GlobalAveragePooling2D, Input, Lambda,
+from keras import backend as K
+from keras.layers import (Conv2D, GlobalAveragePooling2D, Input, Lambda,
                           MaxPooling2D)
-from tensorflow.keras.layers.advanced_activations import LeakyReLU
-from tensorflow.keras.layers.merge import concatenate
-from tensorflow.keras.layers.normalization import BatchNormalization
-from tensorflow.keras.models import Model
-from tensorflow.keras.regularizers import l2
-from tensorflow.keras.utils.vis_utils import plot_model as plot
+from keras.layers.advanced_activations import LeakyReLU
+from keras.layers.merge import concatenate
+from keras.layers.normalization import BatchNormalization
+from keras.models import Model
+from keras.regularizers import l2
+from keras.utils.vis_utils import plot_model as plot
 
 def space_to_depth_x2(x):
     """Thin wrapper for Tensorflow space_to_depth with block_size=2."""
