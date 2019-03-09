@@ -2,9 +2,9 @@ from keras.models import load_model
 from PIL import Image
 from itertools import product
 import numpy as np
-from yad2k_out import get_model
+from src.yad2k_out import get_model
 import datetime as dt
-import model_configs as configs
+import src.model_configs as configs
 import requests
 from io import BytesIO
 
@@ -17,6 +17,7 @@ def load_yolo_model():
         model = get_model(configs.CONFIG_PATH, configs.WEIGHTS_PATH)
     else:
         model = load_model(configs.MODEL_PATH)
+    return model
 
 def get_classes(classes_path):
     """ Loads classes from text file 

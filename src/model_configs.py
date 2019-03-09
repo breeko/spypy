@@ -1,4 +1,3 @@
-#MODEL_PATH = "/var/tak/src/model/yolov2.h5" # set to None to always create from cfg/weights files
 MODEL_PATH = "/tmp/yolov2.h5"
 ANCHORS_PATH =   "model/yolov2.anchors" #"/var/task/src/model/yolov2.anchors"
 CLASSES_PATH =   "model/yolov2.classes" # "/var/task/src/model/yolov2.classes"
