@@ -2,15 +2,14 @@ lib.zip
 setup.cfg
 .vscode
 .DS_Store
-src/handler.py
-<<<<<<< HEAD
+
 venv
 transfer.zip
 */__pycache__
 lambda.zip
 *.pyc
 images
-=======
+
 src/model/*.weights
 src/model/*.h5
 
