@@ -1,6 +1,7 @@
-keras
-tensorflow
+keras==2.1.2
+tensorflow==1.0
 matplotlib
 pillow
 numpy
 requests
+boto3

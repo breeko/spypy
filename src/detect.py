@@ -146,14 +146,13 @@ def find_centers(im_xy, im_wh, im_confidence, im_class_probs, class_names, min_c
     return objects
 
 def detect_from_image(image):
-
     if type(image) is str:
         if image.startswith("http"):
             response = requests.get(image)
             image = Image.open(BytesIO(response.content))
         else:
             image = Image.open(image)
-
+    image = image.convert('RGB')
     anchors = get_anchors(configs.ANCHORS_PATH)
     class_names, _ = get_classes(configs.CLASSES_PATH)
     num_classes = len(class_names)

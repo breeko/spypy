@@ -3,3 +3,9 @@ setup.cfg
 .vscode
 .DS_Store
 src/handler.py
+venv
+transfer.zip
+*/__pycache__
+lambda.zip
+*.pyc
+images
